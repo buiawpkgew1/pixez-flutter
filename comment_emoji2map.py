@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-import urllib.request
 import re 
 soup = BeautifulSoup(open("comment_element.html"))
 d = {}
