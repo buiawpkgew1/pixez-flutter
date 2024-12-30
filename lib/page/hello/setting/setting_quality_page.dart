@@ -39,8 +39,6 @@ class SettingQualityPage extends StatefulWidget {
 
 class _SettingQualityPageState extends State<SettingQualityPage>
     with TickerProviderStateMixin {
-  late Widget _languageTranlator;
-
   final _typeList = ["follow_illust", "recom", "rank"];
   SharedPreferences? _pref;
   int _widgetTypeIndex = -1;
@@ -49,7 +47,6 @@ class _SettingQualityPageState extends State<SettingQualityPage>
 
   @override
   void initState() {
-    _buildLanguageTranlators();
     _initData();
     super.initState();
   }
@@ -75,620 +72,359 @@ class _SettingQualityPageState extends State<SettingQualityPage>
       appBar: AppBar(
         title: Text(I18n.of(context).quality_setting),
       ),
-      body: Container(
-        child: ListView(children: [
-          if (Platform.isAndroid)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                  child: ListTile(
-                    trailing: Icon(Icons.keyboard_arrow_right),
-                    title: Text(I18n.of(context).platform_special_setting),
-                    subtitle: Text(
-                      "For Android",
-                      style: TextStyle(color: Colors.green),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => PlatformPage()));
-                    },
-                  ),
+      body: Observer(builder: (context) {
+        return Container(
+          child: ListView(children: [
+            if (Platform.isAndroid)
+              ListTile(
+                leading: Icon(Icons.android),
+                trailing: const Icon(Icons.arrow_right),
+                title: Text(I18n.of(context).platform_special_setting),
+                subtitle: Text(
+                  "For Android",
+                  style: TextStyle(color: Colors.green),
                 ),
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => PlatformPage()));
+                },
               ),
+            ListTile(
+              leading: const Icon(Icons.network_check),
+              title: Text(I18n.of(context).network),
+              trailing: const Icon(Icons.arrow_right),
+              onTap: () => Leader.push(
+                  context,
+                  NetworkPage(
+                    automaticallyImplyLeading: true,
+                  )),
             ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: ListTile(
-                  trailing: Icon(Icons.keyboard_arrow_right),
-                  title: Text(I18n.of(context).network),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => NetworkPage(
-                              automaticallyImplyLeading: true,
-                            )));
-                  },
-                ),
-              ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: Text(I18n.of(context).share_info_format),
+              trailing: const Icon(Icons.arrow_right),
+              onTap: () => Leader.push(context, CopyTextPage()),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    child: Text(I18n.of(context).large_preview_zoom_quality),
-                    padding: EdgeInsets.all(16),
-                  ),
-                  Observer(builder: (_) {
-                    return Container(
-                      child: TabBar(
-                        dividerColor: Colors.transparent,
-                        indicatorColor: Theme.of(context).colorScheme.secondary,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        tabs: [
-                          Tab(
-                            text: I18n.of(context).large,
-                          ),
-                          Tab(
-                            text: I18n.of(context).source,
-                          )
-                        ],
-                        onTap: (index) {
-                          userSetting.change(index);
-                        },
-                        controller: TabController(
-                            length: 2,
-                            vsync: this,
-                            initialIndex: userSetting.zoomQuality),
-                      ),
-                    );
-                  }),
+            _buildLanguageSelect(),
+            Divider(),
+            ListTile(
+              leading: const Icon(Icons.feed),
+              title: Text(I18n.of(context).feed_preview_quality),
+              trailing: SettingSelectMenu(
+                index: userSetting.feedPreviewQuality,
+                items: [
+                  I18n.of(context).medium,
+                  I18n.of(context).large,
+                  I18n.of(context).source
                 ],
+                onChange: (index) {
+                  userSetting.changeFeedPreviewQuality(index);
+                },
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    child:
-                        Text(I18n.of(context).illustration_detail_page_quality),
-                    padding: EdgeInsets.all(16),
-                  ),
-                  Observer(builder: (_) {
-                    return TabBar(
-                      labelColor: Theme.of(context).textTheme.titleLarge!.color,
-                      dividerColor: Colors.transparent,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      tabs: [
-                        Tab(
-                          text: I18n.of(context).medium,
-                        ),
-                        Tab(
-                          text: I18n.of(context).large,
-                        ),
-                      ],
-                      onTap: (index) {
-                        userSetting.setPictureQuality(index);
-                      },
-                      controller: TabController(
-                          length: 2,
-                          vsync: this,
-                          initialIndex: userSetting.pictureQuality),
-                    );
-                  }),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: Text(I18n.of(context).illustration_detail_page_quality),
+              trailing: SettingSelectMenu(
+                index: userSetting.pictureQuality,
+                items: [I18n.of(context).medium, I18n.of(context).large],
+                onChange: (index) {
+                  userSetting.setPictureQuality(index);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_album),
+              title: Text(I18n.of(context).manga_detail_page_quality),
+              trailing: SettingSelectMenu(
+                index: userSetting.mangaQuality,
+                items: [
+                  I18n.of(context).medium,
+                  I18n.of(context).large,
+                  I18n.of(context).source
                 ],
+                onChange: (index) {
+                  userSetting.setMangaQuality(index);
+                },
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    child: Text(I18n.of(context).manga_detail_page_quality),
-                    padding: EdgeInsets.all(16),
-                  ),
-                  Observer(builder: (_) {
-                    return TabBar(
-                      labelColor: Theme.of(context).textTheme.titleLarge!.color,
-                      dividerColor: Colors.transparent,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      tabs: [
-                        Tab(
-                          text: I18n.of(context).medium,
-                        ),
-                        Tab(
-                          text: I18n.of(context).large,
-                        ),
-                        Tab(
-                          text: I18n.of(context).source,
-                        ),
+            ListTile(
+              leading: const Icon(Icons.zoom_out_map),
+              title: Text(I18n.of(context).large_preview_zoom_quality),
+              trailing: SettingSelectMenu(
+                index: userSetting.zoomQuality,
+                items: [I18n.of(context).large, I18n.of(context).source],
+                onChange: (index) {
+                  userSetting.change(index);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: Text(I18n.of(context).welcome_page),
+              trailing: SettingSelectMenu(
+                index: userSetting.welcomePageNum,
+                items: Platform.isAndroid
+                    ? [
+                        I18n.of(context).home,
+                        I18n.of(context).rank,
+                        I18n.of(context).quick_view,
+                        I18n.of(context).search,
+                        I18n.of(context).setting,
+                      ]
+                    : [
+                        I18n.of(context).home,
+                        I18n.of(context).quick_view,
+                        I18n.of(context).search,
+                        I18n.of(context).setting,
                       ],
-                      onTap: (index) {
-                        userSetting.setMangaQuality(index);
-                      },
-                      controller: TabController(
-                          length: 3,
-                          vsync: this,
-                          initialIndex: userSetting.mangaQuality),
-                    );
-                  }),
+                onChange: (index) {
+                  userSetting.setWelcomePageNum(index);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.layers_outlined),
+              title: Text(I18n.of(context).layout_mode),
+              trailing: SettingSelectMenu(
+                index: userSetting.padMode,
+                items: [
+                  "V:H",
+                  "V:V",
+                  "H:H",
                 ],
+                onChange: (index) {
+                  userSetting.setPadMode(index);
+                },
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Card(
-                child: Column(
-              children: <Widget>[
-                Padding(
-                  child: Row(
-                    children: <Widget>[
-                      Text("Language"),
-                      _languageTranlator,
-                    ],
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  ),
-                  padding: EdgeInsets.all(16),
-                ),
-                Observer(builder: (_) {
-                  var list = Languages.map(
-                    (e) => Tab(text: e.language),
-                  ).toList();
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                        tabBarTheme: TabBarTheme(labelColor: Colors.black)),
-                    child: TabBar(
-                      labelColor: Theme.of(context).textTheme.titleLarge!.color,
-                      dividerColor: Colors.transparent,
-                      isScrollable: true,
-                      tabs: list,
-                      onTap: (index) async {
-                        await userSetting.setLanguageNum(index);
-                        setState(() {
-                          _buildLanguageTranlators();
-                        });
-                      },
-                      controller: TabController(
-                          length: list.length,
-                          vsync: this,
-                          initialIndex: userSetting.languageNum),
-                    ),
-                  );
-                })
-              ],
-            )),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Card(
-                child: Column(
-              children: <Widget>[
-                Padding(
-                  child: Text(I18n.of(context).welcome_page),
-                  padding: EdgeInsets.all(16),
-                ),
-                Observer(builder: (_) {
-                  var tablist = Platform.isAndroid
-                      ? [
-                          Tab(
-                            text: I18n.of(context).home,
-                          ),
-                          Tab(
-                            text: I18n.of(context).rank,
-                          ),
-                          Tab(
-                            text: I18n.of(context).quick_view,
-                          ),
-                          Tab(
-                            text: I18n.of(context).search,
-                          ),
-                          Tab(
-                            text: I18n.of(context).setting,
-                          ),
-                        ]
-                      : [
-                          Tab(
-                            text: I18n.of(context).home,
-                          ),
-                          Tab(
-                            text: I18n.of(context).quick_view,
-                          ),
-                          Tab(
-                            text: I18n.of(context).search,
-                          ),
-                          Tab(
-                            text: I18n.of(context).setting,
-                          ),
-                        ];
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                        tabBarTheme: TabBarTheme(labelColor: Colors.black)),
-                    child: TabBar(
-                      labelColor: Theme.of(context).textTheme.headline6!.color,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      dividerColor: Colors.transparent,
-                      tabs: tablist,
-                      isScrollable: true,
-                      onTap: (index) {
-                        userSetting.setWelcomePageNum(index);
-                      },
-                      controller: TabController(
-                          length: tablist.length,
-                          vsync: this,
-                          initialIndex: userSetting.welcomePageNum),
-                    ),
-                  );
-                })
-              ],
-            )),
-          ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Card(
-                child: Column(
-              children: <Widget>[
-                Padding(
-                  child: Text(I18n.of(context).layout_mode),
-                  padding: EdgeInsets.all(16),
-                ),
-                Observer(builder: (_) {
-                  var tablist = [
-                    Tab(
-                      text: "V:H",
-                    ),
-                    Tab(
-                      text: "V:V",
-                    ),
-                    Tab(
-                      text: "H:H",
-                    ),
-                  ];
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                        tabBarTheme: TabBarTheme(labelColor: Colors.black)),
-                    child: TabBar(
-                      labelColor: Theme.of(context).textTheme.headline6!.color,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      dividerColor: Colors.transparent,
-                      tabs: tablist,
-                      isScrollable: true,
-                      onTap: (index) {
-                        userSetting.setPadMode(index);
-                      },
-                      controller: TabController(
-                          length: tablist.length,
-                          vsync: this,
-                          initialIndex: userSetting.padMode),
-                    ),
-                  );
-                })
-              ],
-            )),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    child: Text(I18n.of(context).crosscount),
-                    padding: EdgeInsets.all(16),
-                  ),
-                  Icon(Icons.stay_primary_portrait),
-                  Observer(builder: (_) {
-                    return TabBar(
-                      labelColor: Theme.of(context).textTheme.headline6!.color,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      dividerColor: Colors.transparent,
-                      tabs: [
-                        Tab(
-                          text: ' 2 ',
-                        ),
-                        Tab(
-                          text: ' 3 ',
-                        ),
-                        Tab(
-                          text: ' 4 ',
-                        ),
-                        Tab(
-                          text: "Adapt",
-                        ),
-                      ],
-                      onTap: (index) async {
-                        if (index == 3) {
-                          await userSetting.setCrossAdapt(true);
-                          Leader.push(
-                              context,
-                              SettingCrossAdpaterPage(
-                                h: false,
-                              ));
-                          return;
-                        }
-                        await userSetting.setCrossAdapt(false);
-                        await userSetting.setCrossCount(index + 2);
-                        BotToast.showText(
-                            text: I18n.of(context).need_to_restart_app);
-                      },
-                      controller: TabController(
-                          length: 4,
-                          vsync: this,
-                          initialIndex: userSetting.crossAdapt
-                              ? 3
-                              : userSetting.crossCount - 2),
-                    );
-                  }),
-                  Icon(Icons.stay_primary_landscape),
-                  Observer(builder: (_) {
-                    return TabBar(
-                      labelColor: Theme.of(context).textTheme.headline6!.color,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      dividerColor: Colors.transparent,
-                      tabs: [
-                        Tab(
-                          text: ' 2 ',
-                        ),
-                        Tab(
-                          text: ' 3 ',
-                        ),
-                        Tab(
-                          text: ' 4 ',
-                        ),
-                        Tab(
-                          text: "Adapt",
-                        ),
-                      ],
-                      onTap: (index) async {
-                        if (index == 3) {
-                          await userSetting.setHCrossAdapt(true);
-                          Leader.push(
-                              context,
-                              SettingCrossAdpaterPage(
-                                h: true,
-                              ));
-                          return;
-                        }
-                        userSetting.setHCrossCount(index + 2);
-                        BotToast.showText(
-                            text: I18n.of(context).need_to_restart_app);
-                      },
-                      controller: TabController(
-                          length: 4,
-                          vsync: this,
-                          initialIndex: userSetting.hCrossAdapt
-                              ? 3
-                              : userSetting.hCrossCount - 2),
-                    );
-                  }),
+            ListTile(
+              leading: const Icon(Icons.stay_primary_portrait),
+              title: Text(I18n.of(context).crosscount),
+              trailing: SettingSelectMenu(
+                index: userSetting.crossAdapt ? 3 : userSetting.crossCount - 2,
+                items: [
+                  '2',
+                  '3',
+                  '4',
+                  "Adapt",
                 ],
+                onChange: (index) async {
+                  if (index == 3) {
+                    await userSetting.setCrossAdapt(true);
+                    Leader.push(
+                        context,
+                        SettingCrossAdpaterPage(
+                          h: false,
+                        ));
+                    return;
+                  }
+                  await userSetting.setCrossAdapt(false);
+                  await userSetting.setCrossCount(index + 2);
+                  BotToast.showText(text: I18n.of(context).need_to_restart_app);
+                },
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                final targetValue = userSetting.maxRunningTask < 1
-                    ? 1
-                    : userSetting.maxRunningTask;
-                return Column(
-                  children: <Widget>[
-                    Padding(
-                      child: Text(
-                          "${I18n.of(context).max_download_task_running_count} $targetValue"),
-                      padding: EdgeInsets.all(16),
-                    ),
-                    Slider(
-                        value: targetValue.toDouble(),
-                        label: '${targetValue}',
-                        min: 1,
-                        max: 10,
-                        divisions: 10,
-                        onChanged: (v) {
-                          int value = v.toInt();
-                          userSetting.setMaxRunningTask(value);
-                        }),
+            ListTile(
+              leading: const Icon(Icons.stay_primary_landscape),
+              title: Text(I18n.of(context).crosscount),
+              trailing: SettingSelectMenu(
+                index:
+                    userSetting.hCrossAdapt ? 3 : userSetting.hCrossCount - 2,
+                items: [
+                  '2',
+                  '3',
+                  '4',
+                  "Adapt",
+                ],
+                onChange: (index) async {
+                  if (index == 3) {
+                    await userSetting.setHCrossAdapt(true);
+                    Leader.push(
+                        context,
+                        SettingCrossAdpaterPage(
+                          h: true,
+                        ));
+                    return;
+                  }
+                  userSetting.setHCrossCount(index + 2);
+                  BotToast.showText(text: I18n.of(context).need_to_restart_app);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.task),
+              title: Text(I18n.of(context).max_download_task_running_count),
+              trailing: SettingSelectMenu(
+                index: userSetting.maxRunningTask - 1,
+                items: [
+                  ...List<String>.generate(10, (i) => "${i + 1}").toList()
+                ],
+                onChange: (index) {
+                  userSetting.setMaxRunningTask(index + 1);
+                },
+              ),
+            ),
+            if (_widgetTypeIndex != -1)
+              ListTile(
+                leading: const Icon(Icons.widgets),
+                title: Text(I18n.of(context).appwidget_recommend_type),
+                trailing: SettingSelectMenu(
+                  index: userSetting.zoomQuality,
+                  items: [
+                    I18n.of(context).recommend,
+                    I18n.of(context).rank,
+                    I18n.of(context).news,
                   ],
-                );
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.isBangs,
-                    title: Text(I18n.of(context).special_shaped_screen),
-                    subtitle: Text('--v--'),
-                    onChanged: (value) async {
-                      userSetting.setIsBangs(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.longPressSaveConfirm,
-                    title: Text(I18n.of(context).long_press_save_confirm),
-                    onChanged: (value) async {
-                      userSetting.setLongPressSaveConfirm(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.hIsNotAllow,
-                    title: Text('H是不行的！'),
-                    onChanged: (value) async {
-                      if (!value) BotToast.showText(text: 'H是可以的！(ˉ﹃ˉ)');
-                      userSetting.setHIsNotAllow(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.isReturnAgainToExit,
-                    title: Text(I18n.of(context).return_again_to_exit),
-                    onChanged: (value) async {
-                      userSetting.setIsReturnAgainToExit(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.swipeChangeArtwork,
-                    title: Text(I18n.of(context).swipe_to_switch_artworks),
-                    onChanged: (value) async {
-                      userSetting.setSwipeChangeArtwork(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.followAfterStar,
-                    title: Text(I18n.of(context).follow_after_star),
-                    onChanged: (value) async {
-                      userSetting.setFollowAfterStar(value);
-                    });
-              }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Observer(builder: (_) {
-                return SwitchListTile(
-                    value: userSetting.defaultPrivateLike,
-                    title: Text(I18n.of(context).private_like_by_default),
-                    onChanged: (value) async {
-                      userSetting.setDefaultPrivateLike(value);
-                    });
-              }),
-            ),
-          ),
-          if (Platform.isIOS)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Card(
-                child: Observer(builder: (_) {
-                  return SwitchListTile(
-                      value: userSetting.nsfwMask,
-                      title: Text("最近任务遮罩"),
-                      onChanged: (value) async {
-                        userSetting.changeNsfwMask(value);
-                      });
-                }),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: Observer(
-                  builder: (context) {
-                    return ListTile(
-                      onTap: () {
-                        Leader.push(context, CopyTextPage());
-                      },
-                      title: Text(I18n.of(context).share_info_format),
-                      trailing: Icon(Icons.arrow_forward),
-                    );
+                  onChange: (index) async {
+                    try {
+                      final type = _typeList[index];
+                      await _pref?.setString("widget_illust_type", type);
+                      await glanceIllustPersistProvider.open();
+                      await glanceIllustPersistProvider.deleteAll();
+                    } catch (e) {}
                   },
                 ),
               ),
+            Divider(),
+            SwitchListTile(
+                value: userSetting.isBangs,
+                title: Text(I18n.of(context).special_shaped_screen),
+                onChanged: (value) async {
+                  userSetting.setIsBangs(value);
+                }),
+            SwitchListTile(
+                value: userSetting.longPressSaveConfirm,
+                title: Text(I18n.of(context).long_press_save_confirm),
+                onChanged: (value) async {
+                  userSetting.setLongPressSaveConfirm(value);
+                }),
+            SwitchListTile(
+                value: userSetting.hIsNotAllow,
+                title: Text('H是不行的！'),
+                onChanged: (value) async {
+                  if (!value) BotToast.showText(text: 'H是可以的！(ˉ﹃ˉ)');
+                  userSetting.setHIsNotAllow(value);
+                }),
+            SwitchListTile(
+                value: userSetting.isReturnAgainToExit,
+                title: Text(I18n.of(context).return_again_to_exit),
+                onChanged: (value) async {
+                  userSetting.setIsReturnAgainToExit(value);
+                }),
+            SwitchListTile(
+                value: userSetting.swipeChangeArtwork,
+                title: Text(I18n.of(context).swipe_to_switch_artworks),
+                onChanged: (value) async {
+                  userSetting.setSwipeChangeArtwork(value);
+                }),
+            if (Platform.isAndroid || Platform.isIOS)
+              SwitchListTile(
+                  value: userSetting.nsfwMask,
+                  title: Text(Platform.isIOS
+                      ? I18n.of(context).recent_screen_mask
+                      : I18n.of(context).secure_window),
+                  onChanged: (value) async {
+                    userSetting.changeNsfwMask(value);
+                  }),
+            if (!Platform.isIOS)
+              SwitchListTile(
+                  value: userSetting.useSaunceNaoWebview,
+                  title: Text(I18n.of(context).open_saucenao_using_webview),
+                  onChanged: (value) async {
+                    userSetting.setUseSaunceNaoWebview(value);
+                  }),
+            SwitchListTile(
+                value: userSetting.illustDetailSaveSkipLongPress,
+                title: Text(I18n.of(context).illust_detail_save_skip_confirm),
+                onChanged: (value) async {
+                  userSetting.setIllustDetailSaveSkipLongPress(value);
+                }),
+            SwitchListTile(
+                value: userSetting.feedAIBadge,
+                title: Text(I18n.of(context).show_feed_ai_badge),
+                onChanged: (value) async {
+                  userSetting.setFeedAIBadge(value);
+                }),
+            Divider(),
+            SwitchListTile(
+                value: userSetting.followAfterStar,
+                title: Text(I18n.of(context).follow_after_star),
+                onChanged: (value) async {
+                  userSetting.setFollowAfterStar(value);
+                }),
+            SwitchListTile(
+                value: userSetting.defaultPrivateLike,
+                title: Text(I18n.of(context).private_like_by_default),
+                onChanged: (value) async {
+                  userSetting.setDefaultPrivateLike(value);
+                }),
+            SwitchListTile(
+              value: userSetting.saveAfterStar,
+              title: Text(
+                  I18n.of(context).automatically_download_when_bookmarking),
+              onChanged: (value) async {
+                userSetting.setSaveAfterStar(value);
+              },
+            ),
+            SwitchListTile(
+              value: userSetting.starAfterSave,
+              title: Text(
+                  I18n.of(context).automatically_bookmark_when_downloading),
+              onChanged: (value) async {
+                userSetting.setStarAfterSave(value);
+              },
+            ),
+            Divider(),
+          ]),
+        );
+      }),
+    );
+  }
+
+  Widget _buildLanguageSelect() {
+    return Container(
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(Icons.translate),
+            title: Text("Language"),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SettingSelectMenu(
+                  index: userSetting.languageNum,
+                  items: [
+                    ...Languages.map(
+                      (e) => e.language,
+                    ).toList()
+                  ],
+                  onChange: (index) async {
+                    await userSetting.setLanguageNum(index);
+                  },
+                ),
+              ],
             ),
           ),
-          if (_widgetTypeIndex != -1)
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Card(
-                  child: Column(
-                children: <Widget>[
-                  Padding(
-                    child: Text("App widget type"),
-                    padding: EdgeInsets.all(16),
-                  ),
-                  Observer(builder: (_) {
-                    var tablist = [
-                      Tab(
-                        text: I18n.of(context).recommend,
-                      ),
-                      Tab(
-                        text: I18n.of(context).rank,
-                      ),
-                      Tab(
-                        text: I18n.of(context).news,
-                      ),
-                    ];
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                          tabBarTheme: TabBarTheme(labelColor: Colors.black)),
-                      child: TabBar(
-                        labelColor:
-                            Theme.of(context).textTheme.headline6!.color,
-                        dividerColor: Colors.transparent,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        tabs: tablist,
-                        isScrollable: true,
-                        onTap: (index) async {
-                          try {
-                            final type = _typeList[index];
-                            await _pref?.setString("widget_illust_type", type);
-                            await glanceIllustPersistProvider.open();
-                            await glanceIllustPersistProvider.deleteAll();
-                          } catch (e) {}
-                        },
-                        controller: TabController(
-                            length: tablist.length,
-                            vsync: this,
-                            initialIndex: _widgetTypeIndex),
-                      ),
-                    );
-                  })
-                ],
-              )),
-            ),
-        ]),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(Languages.map(
+                    (e) => e.language,
+                  ).toList()[userSetting.languageNum]),
+                  _buildLanguageTranlators(),
+                ]),
+          ),
+        ],
       ),
     );
   }
 
-  void _buildLanguageTranlators() {
-    final langsponsors =
-        Languages[userSetting.languageNum].sponsors;
-    _languageTranlator = Row(
+  Widget _buildLanguageTranlators() {
+    final langsponsors = Languages[userSetting.languageNum].sponsors;
+    return Row(
       children: [
         for (final langsponsor in langsponsors)
           InkWell(
@@ -700,18 +436,114 @@ class _SettingQualityPageState extends State<SettingQualityPage>
             },
             child: Row(
               children: <Widget>[
-                CircleAvatar(
-                  backgroundImage: NetworkImage(langsponsor.avatar),
+                SizedBox(
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(langsponsor.avatar),
+                  ),
+                  width: 30,
+                  height: 30,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(langsponsor.name),
                 ),
-                if (langsponsor == langsponsors.last) Icon(Icons.translate)
               ],
             ),
           ),
       ],
+    );
+  }
+}
+
+class SettingSelectMenu extends StatefulWidget {
+  final int index;
+  final List<String> items;
+  final Function(int) onChange;
+  const SettingSelectMenu(
+      {super.key,
+      required this.index,
+      required this.items,
+      required this.onChange});
+
+  @override
+  State<SettingSelectMenu> createState() => _SettingSelectMenuState();
+}
+
+class _SettingSelectMenuState extends State<SettingSelectMenu> {
+  int _index = 0;
+  late List<String> _items;
+  @override
+  void initState() {
+    _items = widget.items;
+    _index = widget.index;
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant SettingSelectMenu oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index || oldWidget.items != widget.items) {
+      setState(() {
+        _index = widget.index;
+        _items = widget.items;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      clipBehavior: Clip.antiAlias,
+      elevation: 0.0,
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      child: InkWell(
+          onTap: () {
+            final renderBox = context.findRenderObject() as RenderBox;
+            var local = renderBox.localToGlobal(Offset.zero);
+            var size = MediaQuery.of(context).size;
+            showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(local.dx - 20, local.dy,
+                    local.dx + size.width - 20, size.height + local.dy),
+                items: <PopupMenuEntry>[
+                  for (int i = 0; i < _items.length; i++)
+                    if (!_items.contains(i))
+                      PopupMenuItem(
+                        value: i,
+                        onTap: () {
+                          setState(() {
+                            _index = i;
+                            widget.onChange(i);
+                          });
+                        },
+                        child: Text(_items[i]),
+                      )
+                ]);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+            child: Container(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 8.0,
+                      ),
+                      Text(
+                        "${_items[_index]}",
+                      )
+                    ],
+                  ),
+                  Icon(Icons.arrow_drop_down)
+                ],
+              ),
+              constraints: BoxConstraints(minWidth: 90),
+            ),
+          )),
     );
   }
 }

@@ -10,7 +10,8 @@ class NovelRankPage extends StatefulWidget {
   _NovelRankPageState createState() => _NovelRankPageState();
 }
 
-class _NovelRankPageState extends State<NovelRankPage> {
+class _NovelRankPageState extends State<NovelRankPage>
+    with AutomaticKeepAliveClientMixin {
   final modeList = [
     "day",
     "day_male",
@@ -33,9 +34,6 @@ class _NovelRankPageState extends State<NovelRankPage> {
   }
 
   String? toRequestDate(DateTime dateTime) {
-    if (dateTime == null) {
-      return null;
-    }
     return "${dateTime.year}-${dateTime.month}-${dateTime.day}";
   }
 
@@ -44,6 +42,7 @@ class _NovelRankPageState extends State<NovelRankPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     List<String> w = I18n.of(context).novel_mode_list.split(" ");
     return DefaultTabController(
       length: modeList.length,
@@ -89,4 +88,7 @@ class _NovelRankPageState extends State<NovelRankPage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

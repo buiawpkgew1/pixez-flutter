@@ -65,7 +65,7 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
     _scrollController = ScrollController();
     _easyRefreshController = EasyRefreshController(
         controlFinishLoad: true, controlFinishRefresh: true);
-    _recomUserStore = RecomUserStore();
+    _recomUserStore = RecomUserStore(_easyRefreshController);
     spotlightStore = SpotlightStore(null);
     _lightingStore = LightingStore(
       ApiForceSource(
@@ -102,7 +102,7 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
               elevation: 0.0,
               titleSpacing: 0.0,
               automaticallyImplyLeading: false,
-              backgroundColor: Theme.of(context).canvasColor,
+              // backgroundColor: Theme.of(context).canvasColor,
               title: Text(""),
             )
           ],
@@ -112,6 +112,7 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
           controller: _easyRefreshController,
           callLoadOverOffset: Platform.isIOS ? 2 : 5,
           header: PixezDefault.header(context),
+          footer: PixezDefault.footer(context),
           onRefresh: () async {
             await fetchT();
           },

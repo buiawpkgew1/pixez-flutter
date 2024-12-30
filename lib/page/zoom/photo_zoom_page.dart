@@ -2,20 +2,28 @@ import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:pixez/clipboard_plugin.dart';
 import 'package:pixez/component/pixiv_image.dart';
 import 'package:pixez/main.dart';
 import 'package:pixez/models/illust.dart';
+import 'package:pixez/page/picture/illust_store.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path/path.dart';
 
 class PhotoZoomPage extends StatefulWidget {
   final int index;
   final Illusts illusts;
+  final IllustStore illustStore;
 
-  const PhotoZoomPage({Key? key, required this.index, required this.illusts})
+  const PhotoZoomPage(
+      {Key? key,
+      required this.index,
+      required this.illusts,
+      required this.illustStore})
       : super(key: key);
 
   @override
@@ -43,17 +51,20 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
     initCache();
   }
 
+  @override
+  void dispose() {
+    if (_fullScreen)
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+          overlays: SystemUiOverlay.values);
+    super.dispose();
+  }
+
   initCache() async {
-    var fileInfo = await pixivCacheManager.getFileFromCache(nowUrl);
+    var fileInfo = await pixivCacheManager!.getFileFromCache(nowUrl);
     if (mounted)
       setState(() {
         shareShow = fileInfo != null;
       });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -80,10 +91,10 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
         );
       } else {
         return Scaffold(
-          backgroundColor: Colors.black,
           extendBody: true,
           bottomNavigationBar: _buildBottom(context),
           extendBodyBehindAppBar: true,
+          backgroundColor: Colors.black,
           body: Container(
               child: PhotoViewGallery.builder(
             scrollPhysics: const BouncingScrollPhysics(),
@@ -108,7 +119,7 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
                 _index = index;
                 shareShow = false;
               });
-              var file = await pixivCacheManager.getFileFromCache(nowUrl);
+              var file = await pixivCacheManager!.getFileFromCache(nowUrl);
               if (file != null && mounted)
                 setState(() {
                   shareShow = true;
@@ -126,8 +137,30 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
   bool show = false;
   bool shareShow = false;
   bool _loadSource = false;
+  bool _fullScreen = false;
 
   Widget _buildBottom(BuildContext context) {
+    if (_fullScreen) {
+      return BottomAppBar(
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    _fullScreen = false;
+                  });
+                  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+                      overlays: SystemUiOverlay.values);
+                },
+                icon: Icon(
+                  Icons.fullscreen_exit,
+                  color: Colors.white.withOpacity(0.5),
+                ))
+          ],
+        ),
+      );
+    }
     return BottomAppBar(
       color: Colors.transparent,
       child: Visibility(
@@ -166,6 +199,32 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
                     onPressed: () async {
                       Navigator.of(context).pop();
                     }),
+                IconButton(
+                  icon: Icon(Icons.fullscreen, color: Colors.white),
+                  onPressed: () {
+                    setState(() {
+                      _fullScreen = true;
+                    });
+                    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+                        overlays: []);
+                  },
+                ),
+                if (ClipboardPlugin.supported)
+                  IconButton(
+                    icon: Icon(
+                      Icons.copy,
+                      color: Colors.white,
+                    ),
+                    onPressed: () async {
+                      final url = ClipboardPlugin.getImageUrl(_illusts, _index);
+                      if (url == null) return;
+
+                      ClipboardPlugin.showToast(
+                        context,
+                        ClipboardPlugin.copyImageFromUrl(url),
+                      );
+                    },
+                  ),
                 GestureDetector(
                     child: IconButton(
                         icon: Icon(
@@ -177,6 +236,13 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
                             saveStore.saveImage(widget.illusts, index: _index);
                           else
                             saveStore.saveImage(widget.illusts);
+                          if (userSetting.starAfterSave &&
+                              (widget.illustStore.state == 0)) {
+                            widget.illustStore.star(
+                                restrict: userSetting.defaultPrivateLike
+                                    ? "private"
+                                    : "public");
+                          }
                         }),
                     onLongPress: () async {
                       if (_illusts.metaPages.isNotEmpty)
@@ -195,7 +261,7 @@ class _PhotoZoomPageState extends State<PhotoZoomPage> {
                         ),
                         onPressed: () async {
                           var file =
-                              await pixivCacheManager.getFileFromCache(nowUrl);
+                              await pixivCacheManager!.getFileFromCache(nowUrl);
                           if (file != null) {
                             String targetPath = join(
                                 (await getTemporaryDirectory()).path,

@@ -33,7 +33,8 @@ class NewIllustPage extends StatefulWidget {
   _NewIllustPageState createState() => _NewIllustPageState();
 }
 
-class _NewIllustPageState extends State<NewIllustPage> {
+class _NewIllustPageState extends State<NewIllustPage>
+    with AutomaticKeepAliveClientMixin {
   late ApiForceSource futureGet;
   late StreamSubscription<String> subscription;
   late ScrollController _scrollController;
@@ -61,6 +62,7 @@ class _NewIllustPageState extends State<NewIllustPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Stack(
       children: [
         LightingList(
@@ -111,63 +113,68 @@ class _NewIllustPageState extends State<NewIllustPage> {
   }
 
   Container buildContainer(BuildContext context) {
+    FlyoutController controller = FlyoutController();
     return Container(
-        child: Align(
-      alignment: Alignment.centerRight,
-      child: IconButton(
-          icon: Icon(FluentIcons.list),
-          onPressed: () {
-            showBottomSheet(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(16),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: FlyoutTarget(
+          controller: controller,
+          child: IconButton(
+            icon: Icon(FluentIcons.list),
+            onPressed: () => controller.showFlyout(
+              builder: (context) => MenuFlyout(
+                items: [
+                  MenuFlyoutItem(
+                    text: Text(I18n.of(context).all),
+                    onPressed: () {
+                      setState(() {
+                        futureGet = ApiForceSource(
+                          futureGet: (e) => apiClient.getFollowIllusts(
+                            'all',
+                            force: e,
+                          ),
+                          glanceKey: "follow_illust",
+                        );
+                      });
+                    },
                   ),
-                ),
-                context: context,
-                builder: (context) => SafeArea(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          ListTile(
-                            title: Text(I18n.of(context).all),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              setState(() {
-                                futureGet = ApiForceSource(
-                                    futureGet: (e) => apiClient
-                                        .getFollowIllusts('all', force: e),
-                                    glanceKey: "follow_illust");
-                              });
-                            },
+                  MenuFlyoutItem(
+                    text: Text(I18n.of(context).public),
+                    onPressed: () {
+                      setState(() {
+                        futureGet = ApiForceSource(
+                          futureGet: (e) => apiClient.getFollowIllusts(
+                            'public',
+                            force: e,
                           ),
-                          ListTile(
-                            title: Text(I18n.of(context).public),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              setState(() {
-                                futureGet = ApiForceSource(
-                                    futureGet: (e) => apiClient
-                                        .getFollowIllusts('public', force: e),
-                                    glanceKey: "follow_illust");
-                              });
-                            },
+                          glanceKey: "follow_illust",
+                        );
+                      });
+                    },
+                  ),
+                  MenuFlyoutItem(
+                    text: Text(I18n.of(context).private),
+                    onPressed: () {
+                      setState(() {
+                        futureGet = ApiForceSource(
+                          futureGet: (e) => apiClient.getFollowIllusts(
+                            'private',
+                            force: e,
                           ),
-                          ListTile(
-                            title: Text(I18n.of(context).private),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              setState(() {
-                                futureGet = ApiForceSource(
-                                    futureGet: (e) => apiClient
-                                        .getFollowIllusts('private', force: e),
-                                    glanceKey: "follow_illust");
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ));
-          }),
-    ));
+                          glanceKey: "follow_illust",
+                        );
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

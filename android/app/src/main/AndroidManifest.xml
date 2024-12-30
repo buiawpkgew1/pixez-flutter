@@ -27,6 +27,7 @@
 
     <application
         android:name=".PixEz"
+        android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:label="PixEz"
         android:requestLegacyExternalStorage="true">
@@ -51,9 +52,15 @@
                 android:resource="@xml/card_app_widget_info" />
         </receiver>
 
-        <activity
-            android:name=".IntentActivity"
-            android:theme="@style/LaunchTheme"></activity>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.flutter_inappwebview.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
 
         <activity
             android:name=".MainActivity"
@@ -147,6 +154,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
     </application>
 
 </manifest>

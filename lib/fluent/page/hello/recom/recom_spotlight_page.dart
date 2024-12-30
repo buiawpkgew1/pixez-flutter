@@ -21,11 +21,11 @@ import 'dart:math';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:pixez/component/pixez_default_header.dart';
 import 'package:pixez/er/leader.dart';
 import 'package:pixez/exts.dart';
 import 'package:pixez/fluent/component/illust_card.dart';
 import 'package:pixez/fluent/component/pixez_button.dart';
-import 'package:pixez/fluent/component/pixez_default_header.dart';
 import 'package:pixez/fluent/component/pixiv_image.dart';
 import 'package:pixez/fluent/page/hello/recom/recom_user_road.dart';
 import 'package:pixez/fluent/page/soup/soup_page.dart';
@@ -54,7 +54,7 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
     ApiForceSource(
         futureGet: (e) => apiClient.getRecommend(), glanceKey: "recom"),
   );
-  final RecomUserStore _recomUserStore = RecomUserStore();
+  final RecomUserStore _recomUserStore = RecomUserStore(null);
   late StreamSubscription<String> subscription;
   final EasyRefreshController _easyRefreshController = EasyRefreshController(
       controlFinishLoad: true, controlFinishRefresh: true);
@@ -244,9 +244,9 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
                           child: ButtonTheme(
                             data: ButtonThemeData(
                               iconButtonStyle: ButtonStyle(
-                                padding: ButtonState.all(EdgeInsets.zero),
+                                padding: WidgetStateProperty.all(EdgeInsets.zero),
                                 backgroundColor:
-                                    ButtonState.all(Colors.transparent),
+                                    WidgetStateProperty.all(Colors.transparent),
                               ),
                             ),
                             child: PixEzButton(
@@ -320,8 +320,8 @@ class _RecomSpolightPageState extends State<RecomSpolightPage>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withOpacity(0.0),
-                            Colors.black.withOpacity(opacity),
+                            Colors.black.withValues(alpha: 255 * 0.0),
+                            Colors.black.withValues(alpha: 255 * opacity),
                           ],
                         ),
                       ),

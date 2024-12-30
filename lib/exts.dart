@@ -25,6 +25,11 @@ extension HostExts on Uri {
     } else {
       if (userSetting.pictureSource != ImageHost) {
         try {
+          if (userSetting.pictureSource!.contains('/')) {
+            final preHost = this.host;
+            return Uri.parse(
+                '${this.toString().replaceAll(preHost, userSetting.pictureSource!)}');
+          }
           return this.replace(host: userSetting.pictureSource);
         } catch (e) {}
       }
@@ -42,7 +47,7 @@ extension TimeExts on String {
   String toShortTime() {
     try {
       var formatter = new DateFormat('yyyy-MM-dd HH:mm');
-      return formatter.format(DateTime.parse(this));
+      return formatter.format(DateTime.parse(this).toLocal());
     } catch (e) {
       return this;
     }
@@ -58,26 +63,31 @@ extension TimeExts on String {
         .replaceAll("</p>", "");
   }
 
-  String toTrueUrl() {
-    if (userSetting.disableBypassSni || this.contains("novel")) {
-      return this;
-    } else {
-      if (userSetting.pictureSource != ImageHost) {
-        try {
-          return Uri.parse(this)
-              .replace(host: userSetting.pictureSource)
-              .toString();
-        } catch (e) {}
-      }
-      if (this.contains(ImageHost)) {
-        return this.replaceFirst(ImageHost, splashStore.host);
-      }
-      if (this.contains(ImageSHost)) {
-        return this.replaceFirst(ImageSHost, splashStore.host);
-      }
-    }
-    return this;
-  }
+  // String toTrueUrl() {
+  //   if (userSetting.disableBypassSni || this.contains("novel")) {
+  //     return this;
+  //   } else {
+  //     if (userSetting.pictureSource != ImageHost) {
+  //       try {
+  //         if (userSetting.pictureSource!.contains('/')) {
+  //           Uri preUri = Uri.parse(this);
+  //           final preHost = preUri.host;
+  //           return this.replaceAll(preHost, userSetting.pictureSource!);
+  //         }
+  //         return Uri.parse(this)
+  //             .replace(host: userSetting.pictureSource)
+  //             .toString();
+  //       } catch (e) {}
+  //     }
+  //     if (this.contains(ImageHost)) {
+  //       return this.replaceFirst(ImageHost, splashStore.host);
+  //     }
+  //     if (this.contains(ImageSHost)) {
+  //       return this.replaceFirst(ImageSHost, splashStore.host);
+  //     }
+  //   }
+  //   return this;
+  // }
 
   String toLegal() {
     return this
@@ -113,10 +123,16 @@ extension NovelExts on Novel {
 }
 
 extension IllustExts on Illusts {
-  bool hateByUser({bool ai = false, bool includeR18Setting = false}) {
-    if (ai) {
-      return false;
+  bool hIsNotAllow() {
+    if (userSetting.hIsNotAllow) {
+      if (tags.any((tag) => tag.name.startsWith('R-18'))) {
+        return true;
+      }
     }
+    return false;
+  }
+
+  bool hateByUser({bool ai = false, bool includeR18Setting = false}) {
     if (includeR18Setting) {
       if (userSetting.hIsNotAllow) {
         for (int i = 0; i < tags.length; i++) {
@@ -124,7 +140,7 @@ extension IllustExts on Illusts {
         }
       }
     }
-    if (muteStore.banAIIllust && illustAIType == 2) {
+    if (muteStore.banAIIllust && illustAIType == 2 && !ai) {
       return true;
     }
     for (var t in muteStore.banTags) {

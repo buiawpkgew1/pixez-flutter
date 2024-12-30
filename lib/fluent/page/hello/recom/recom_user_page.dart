@@ -16,8 +16,8 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:pixez/component/pixez_default_header.dart';
 import 'package:pixez/fluent/component/painer_card.dart';
-import 'package:pixez/fluent/component/pixez_default_header.dart';
 import 'package:pixez/i18n.dart';
 import 'package:pixez/page/hello/recom/recom_user_store.dart';
 
@@ -39,7 +39,7 @@ class _RecomUserPageState extends State<RecomUserPage> {
     _refreshController = EasyRefreshController(
         controlFinishLoad: true, controlFinishRefresh: true);
     _recomUserStore =
-        widget.recomUserStore ?? RecomUserStore(controller: _refreshController);
+        widget.recomUserStore ?? RecomUserStore(_refreshController);
     if (widget.recomUserStore != null) {
       _recomUserStore.controller = _refreshController;
     }
