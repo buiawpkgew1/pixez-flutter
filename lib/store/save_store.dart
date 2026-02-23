@@ -127,40 +127,51 @@ abstract class _SaveStoreBase with Store {
       case SaveState.INQUEUE:
         BotToast.showCustomText(
           onlyOne: true,
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
           toastBuilder: (textCancel) => Align(
             alignment: Alignment(0, 0.8),
             child: Card(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  IconButton(icon: Icon(Icons.info), onPressed: () {}),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      vertical: 8.0,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(ctx!, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return JobPage();
+                      },
                     ),
-                    child: Text("${I18n.of(ctx!).already_in_query}"),
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      if (stream.entity is QueueRetryEntity) {
-                        QueueRetryEntity entity =
-                            stream.entity as QueueRetryEntity;
-                        final id = entity.taskPersist.id;
-                        if (id != null) {
-                          await fetcher.taskPersistProvider.remove(id);
-                          _joinQueue(
-                            entity.url,
-                            entity.illusts,
-                            entity.fileName,
-                          );
+                  );
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    IconButton(icon: Icon(Icons.info), onPressed: () {}),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 8.0,
+                      ),
+                      child: Text("${I18n.of(ctx!).already_in_query}"),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        if (stream.entity is QueueRetryEntity) {
+                          QueueRetryEntity entity =
+                              stream.entity as QueueRetryEntity;
+                          final id = entity.taskPersist.id;
+                          if (id != null) {
+                            await fetcher.taskPersistProvider.remove(id);
+                            _joinQueue(
+                              entity.url,
+                              entity.illusts,
+                              entity.fileName,
+                            );
+                          }
                         }
-                      }
-                    },
-                    icon: Icon(Icons.refresh),
-                  ),
-                ],
+                      },
+                      icon: Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
